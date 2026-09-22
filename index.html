@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scratch Quests</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --motion:#4C97FF;
+    --looks:#9966FF;
+    --sound:#CF63CF;
+    --events:#FFBF00;
+    --control:#FF8C1A;
+    --operators:#59C059;
+    --sensing:#5CB1D6;
+    --variables:#FF8C1A;
+    --myblocks:#FF6680;
+    --locked:#C5CBD3;
+    --locked-ink:#6A727D;
+    --canvas:#F4F7FB;
+    --ink:#1B2430;
+    --flag:#4CBF56;
+    --glow:#FFD500;
+    box-sizing:border-box;
+  }
+  *,*::before,*::after{box-sizing:inherit}
+
+  body{
+    margin:0;
+    padding:28px 16px 64px;
+    font-family:Nunito,"Helvetica Neue",Helvetica,sans-serif;
+    color:var(--ink);
+    background-color:var(--canvas);
+    background-image:radial-gradient(#D3DDEA 1.5px, transparent 1.5px);
+    background-size:22px 22px;
+    -webkit-text-size-adjust:100%;
+  }
+
+  .wrap{max-width:660px;margin:0 auto}
+
+  /* ---------- hat block ---------- */
+  .hat{
+    background:var(--events);
+    border-radius:26px 26px 6px 6px;
+    padding:22px 22px 20px;
+    position:relative;
+    box-shadow:0 2px 0 rgba(0,0,0,.14);
+  }
+  .hat::after{content:'';position:absolute;bottom:-8px;left:22px;width:34px;height:9px;background:inherit;border-radius:0 0 9px 9px}
+  .hat h1{margin:0 0 4px;font-size:1.5rem;font-weight:800;letter-spacing:-.01em}
+  .hat p{margin:0 0 14px;font-weight:600;font-size:.95rem;max-width:44ch}
+  .namerow{display:flex;gap:8px;flex-wrap:wrap}
+
+  /* ---------- oval input, like a Scratch field ---------- */
+  input[type=text]{
+    font:inherit;font-weight:700;padding:9px 16px;border:none;border-radius:999px;
+    background:#fff;color:var(--ink);min-width:0;flex:1 1 180px;
+    box-shadow:inset 0 0 0 2px rgba(0,0,0,.12);
+  }
+  input[type=text]::placeholder{color:#9AA3AE;font-weight:600}
+
+  button{
+    font:inherit;font-weight:800;cursor:pointer;border:none;border-radius:999px;
+    padding:9px 20px;background:#fff;color:var(--ink);box-shadow:0 2px 0 rgba(0,0,0,.18);
+  }
+  button.go{background:var(--flag);color:#fff}
+  button:active{transform:translateY(2px);box-shadow:none}
+  :focus-visible{outline:3px solid #0D3B66;outline-offset:2px}
+
+  /* ---------- quest blocks ---------- */
+  .stack{margin-top:9px}
+  .block{
+    position:relative;margin-bottom:9px;padding:18px 22px;border-radius:6px;
+    color:#fff;box-shadow:0 2px 0 rgba(0,0,0,.14);
+  }
+  .block::after{content:'';position:absolute;bottom:-8px;left:22px;width:34px;height:9px;background:inherit;border-radius:0 0 9px 9px}
+
+  .block .label{font-weight:800;font-size:.8rem;opacity:.85;margin-bottom:2px}
+  .block h2{margin:0 0 8px;font-size:1.18rem;font-weight:800;letter-spacing:-.01em}
+  .block .task{margin:0;font-weight:600;line-height:1.45;max-width:52ch}
+  .block .task em,.boss em{font-style:normal;background:rgba(255,255,255,.22);padding:1px 6px;border-radius:5px}
+
+  .reward{
+    display:inline-block;margin-top:12px;background:rgba(0,0,0,.18);
+    padding:6px 13px;border-radius:999px;font-weight:700;font-size:.88rem;
+  }
+
+  .gate{margin-top:16px;padding-top:14px;border-top:2px solid rgba(255,255,255,.28)}
+  .gate .hunt{margin:0 0 10px;font-weight:600;line-height:1.45;max-width:52ch}
+  .gaterow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .msg{margin:10px 0 0;font-weight:700;font-size:.92rem;min-height:1.2em}
+
+  .block.locked{background:var(--locked);color:var(--locked-ink);box-shadow:0 2px 0 rgba(0,0,0,.08)}
+  .block.locked h2,.block.locked .label{opacity:.75}
+  .block.locked .body{display:none}
+  .block.locked .lockline{margin:0;font-weight:700;display:flex;gap:9px;align-items:center}
+
+  .block.done{opacity:.72}
+  .block.done h2::after{content:' ✓'}
+
+  /* ---------- boss quest ---------- */
+  .boss{padding:24px 22px 26px}
+  .boss h2{font-size:1.45rem;margin-bottom:6px}
+  .boss .pitch{margin:0 0 4px;font-weight:700;line-height:1.45;max-width:50ch}
+  .boss .aside{margin:0;font-weight:600;font-size:.92rem;opacity:.85;max-width:50ch}
+  .boss .sub{
+    margin:20px 0 10px;font-weight:800;font-size:.95rem;
+    padding-bottom:7px;border-bottom:2px solid rgba(255,255,255,.3);
+  }
+  .checks{list-style:none;margin:0;padding:0}
+  .checks li{margin-bottom:9px}
+  .checks label{
+    display:flex;gap:11px;align-items:flex-start;font-weight:600;line-height:1.4;
+    cursor:pointer;max-width:50ch;
+  }
+  .checks input{
+    appearance:none;-webkit-appearance:none;margin:2px 0 0;flex:0 0 auto;
+    width:21px;height:21px;border-radius:5px;background:#fff;cursor:pointer;
+    box-shadow:inset 0 0 0 2px rgba(0,0,0,.14);
+  }
+  .checks input:checked{background:var(--flag)}
+  .checks input:checked::after{
+    content:'✓';display:block;text-align:center;line-height:21px;
+    color:#fff;font-weight:800;font-size:.95rem;
+  }
+  .checks input:checked + span{opacity:.6;text-decoration:line-through}
+
+  .picks{margin:0;padding-left:22px}
+  .picks li{font-weight:600;line-height:1.4;margin-bottom:7px;max-width:50ch}
+
+  .shipped{
+    margin:18px 0 0;padding:13px 16px;border-radius:8px;background:rgba(0,0,0,.2);
+    font-weight:700;line-height:1.45;max-width:50ch;
+  }
+  .shipped strong{display:block;font-size:1.05rem;margin-bottom:3px}
+
+  /* the one reveal */
+  @keyframes pop{
+    0%{box-shadow:0 0 0 0 var(--glow),0 2px 0 rgba(0,0,0,.14)}
+    35%{box-shadow:0 0 0 6px var(--glow),0 2px 0 rgba(0,0,0,.14)}
+    100%{box-shadow:0 0 0 0 var(--glow),0 2px 0 rgba(0,0,0,.14)}
+  }
+  .block.justopened{animation:pop 1.1s ease-out}
+  @media (prefers-reduced-motion:reduce){
+    .block.justopened{animation:none}
+    button:active{transform:none}
+  }
+
+  /* ---------- end cap ---------- */
+  .cap{
+    background:var(--sensing);color:#fff;border-radius:6px 6px 22px 22px;
+    padding:20px 22px 24px;box-shadow:0 2px 0 rgba(0,0,0,.14);
+  }
+  .cap h2{margin:0 0 8px;font-size:1.15rem;font-weight:800}
+  .cap p{margin:0 0 10px;font-weight:600;line-height:1.45;max-width:52ch}
+  .cap p:last-child{margin-bottom:0}
+  .cap em{font-style:normal;background:rgba(255,255,255,.22);padding:1px 6px;border-radius:5px}
+  .cap a{color:#fff;font-weight:800}
+
+  footer{margin-top:26px;text-align:center;font-weight:600;font-size:.85rem;color:#6A727D}
+  footer button{background:transparent;box-shadow:none;padding:4px 8px;font-weight:700;font-size:.85rem;color:#6A727D;text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hat">
+    <h1>Scratch Quests</h1>
+    <p>One project, six upgrades, one boss. Finish a quest, find the code, unlock the next one.</p>
+    <div class="namerow">
+      <input type="text" id="who" placeholder="Type your name" autocomplete="off" spellcheck="false" aria-label="Your name">
+      <button class="go" id="start">Start</button>
+    </div>
+  </div>
+
+  <div class="stack" id="stack"></div>
+
+  <div class="cap">
+    <h2>Before you leave</h2>
+    <p>However far you got, share it. Click <em>See Project Page</em>, then <em>Add to Studio</em>.</p>
+    <p><a id="studio" href="#" target="_blank" rel="noopener">Open the class studio</a></p>
+  </div>
+
+  <footer>
+    Progress saves on this device only. <button id="reset">Start over</button>
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   EDIT HERE — Mr. Langer
+   Change the studio link and any codes before class.
+   Answers are case-insensitive. List every spelling you'll accept.
+   ============================================================ */
+
+const STUDIO_URL = "https://scratch.mit.edu/studios/000000/";   // <-- paste your studio link
+const TEACHER_CODE = "langer";                                   // unlocks everything, for demos
+
+const QUESTS = [
+  {
+    color: "motion",
+    title: "Pick your hero",
+    task: "Delete the cat. Choose any sprite from the library. Rename your project <em>Quest_YourName</em>.",
+    reward: "Unlocks: the Motion blocks",
+    hunt: "Look at the three tabs in the top-left of the editor. They say Code, Costumes, and what?",
+    accept: ["sounds","sound"]
+  },
+  {
+    color: "operators",
+    title: "Make it move",
+    task: "Use <em>when key pressed</em> so your sprite moves with the arrow keys. All four directions.",
+    reward: "Unlocks: the Operators blocks",
+    hunt: "What color are the Operators blocks in the palette?",
+    accept: ["green"]
+  },
+  {
+    color: "sound",
+    title: "Give it a voice",
+    task: "Add <em>when this sprite clicked</em> and make your sprite say something. Then add a sound.",
+    reward: "Unlocks: the Sound blocks",
+    hunt: "Go to the top menu bar of scratch.mit.edu. It says Create, Explore, About, and what?",
+    accept: ["ideas","idea"]
+  },
+  {
+    color: "looks",
+    title: "Build a world",
+    task: "Add a backdrop. Make your sprite react when it touches an edge or a color — change size, change color, or hide.",
+    reward: "Unlocks: the Looks blocks and graphic effects",
+    hunt: "Click Add Extension in the bottom-left corner. Which extension lets you draw lines behind your sprite?",
+    accept: ["pen","the pen"]
+  },
+  {
+    color: "control",
+    title: "Add a rival",
+    task: "Add a second sprite that does something different — chases you, runs away, or moves on its own with <em>forever</em>.",
+    reward: "Unlocks: the Control blocks and clones",
+    hunt: "Open the Sensing category. Which block measures how loud the microphone is?",
+    accept: ["loudness","the loudness"]
+  },
+  {
+    color: "variables",
+    title: "Keep score",
+    task: "Make a variable called <em>Score</em>. Set it to 0 at the start, and change it by 1 when your two sprites touch.",
+    reward: "Unlocks: the boss quest",
+    hunt: "Open the Variables category. One button at the top says Make a Variable. What does the other one say?",
+    accept: ["make a list","list","lists"]
+  },
+  {
+    boss: true,
+    color: "myblocks",
+    title: "Boss quest: ship a game",
+    pitch: "You have a sprite that moves and a score that counts. That is not a game yet — a game is something a stranger can win or lose.",
+    aside: "Keep the same project. Do not start over.",
+    requirements: [
+      "Something worth chasing. When your player touches it, send it to <em>random position</em> so it never sits still.",
+      "A clock. Make a <em>Time</em> variable, set it to 30, and use <em>repeat until</em> to count it down by 1 every second.",
+      "An ending. When the clock hits 0, say the final score and use <em>stop all</em>."
+    ],
+    upgrades: [
+      "A sound and a costume change on every point.",
+      "A way to lose — an enemy sprite that ends the game the second it touches you.",
+      "A title screen. Backdrop with the rules, and <em>wait until key space pressed</em> to begin.",
+      "Rising difficulty. Move the enemy faster each time the score goes up.",
+      "A second level. Switch backdrop when the score passes 10."
+    ],
+    shipped: {
+      head: "Now the real test.",
+      body: "Hand your Chromebook to someone near you and say nothing. Watch them play. Whatever they got confused about is the next thing you fix — not the thing you explain."
+    }
+  }
+];
+
+/* ============================================================
+   No need to edit below this line.
+   ============================================================ */
+
+const KEY = "scratch-quests-v2";
+const LAST = QUESTS.length;
+let state = load();
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(!raw) return {name:"", open:1, checks:[]};
+    const p = JSON.parse(raw);
+    return {
+      name: p.name || "",
+      open: Math.min(Math.max(p.open || 1, 1), LAST),
+      checks: Array.isArray(p.checks) ? p.checks : []
+    };
+  }catch(e){ return {name:"", open:1, checks:[]}; }
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+
+const stack = document.getElementById("stack");
+const who = document.getElementById("who");
+document.getElementById("studio").href = STUDIO_URL;
+
+function norm(s){ return (s||"").toLowerCase().replace(/[^a-z0-9 ]/g,"").replace(/\s+/g," ").trim(); }
+
+function bossMarkup(q, n){
+  const reqs = q.requirements.map((r,i) => {
+    const id = "r" + i;
+    const on = state.checks.indexOf(id) > -1;
+    return '<li><label><input type="checkbox" data-check="' + id + '"' + (on?' checked':'') +
+           '><span>' + r + '</span></label></li>';
+  }).join("");
+
+  const ups = q.upgrades.map(u => '<li>' + u + '</li>').join("");
+  const allDone = q.requirements.every((r,i) => state.checks.indexOf("r"+i) > -1);
+
+  return '<p class="pitch">' + q.pitch + '</p>' +
+         '<p class="aside">' + q.aside + '</p>' +
+         '<p class="sub">Three things it needs</p>' +
+         '<ul class="checks">' + reqs + '</ul>' +
+         '<p class="sub">Still have time? Pick any of these</p>' +
+         '<ul class="picks">' + ups + '</ul>' +
+         (allDone ? '<p class="shipped"><strong>' + q.shipped.head + '</strong>' + q.shipped.body + '</p>' : '');
+}
+
+function render(justOpened){
+  stack.innerHTML = "";
+
+  QUESTS.forEach((q, i) => {
+    const n = i + 1;
+    const unlocked = n <= state.open;
+    const done = n < state.open;
+
+    const el = document.createElement("section");
+    el.className = "block" + (q.boss ? " boss" : "") + (unlocked ? "" : " locked") + (done ? " done" : "");
+    if(unlocked) el.style.background = "var(--" + q.color + ")";
+    if(justOpened === n) el.classList.add("justopened");
+
+    const head = document.createElement("div");
+    head.innerHTML = '<div class="label">' + (q.boss ? "Final quest" : "Quest " + n) + '</div>' +
+                     '<h2>' + (unlocked ? q.title : "Locked") + '</h2>';
+    el.appendChild(head);
+
+    if(!unlocked){
+      const p = document.createElement("p");
+      p.className = "lockline";
+      p.innerHTML = '<span aria-hidden="true">🔒</span> Finish Quest ' + (n-1) + ' and enter the code.';
+      el.appendChild(p);
+      stack.appendChild(el);
+      return;
+    }
+
+    const body = document.createElement("div");
+    body.className = "body";
+
+    if(q.boss){
+      body.innerHTML = bossMarkup(q, n);
+    }else{
+      body.innerHTML = '<p class="task">' + q.task + '</p><div class="reward">' + q.reward + '</div>';
+      if(q.hunt && n === state.open){
+        const gate = document.createElement("div");
+        gate.className = "gate";
+        gate.innerHTML =
+          '<p class="hunt">' + q.hunt + '</p>' +
+          '<div class="gaterow">' +
+            '<input type="text" id="code' + n + '" placeholder="Answer" autocomplete="off" spellcheck="false" aria-label="Answer for quest ' + n + '">' +
+            '<button class="go" data-q="' + n + '">Unlock</button>' +
+          '</div>' +
+          '<p class="msg" id="msg' + n + '" role="status" aria-live="polite"></p>';
+        body.appendChild(gate);
+      }
+    }
+
+    el.appendChild(body);
+    stack.appendChild(el);
+  });
+
+  who.value = state.name;
+}
+
+function attempt(n){
+  const input = document.getElementById("code" + n);
+  const msg = document.getElementById("msg" + n);
+  const guess = norm(input.value);
+  if(!guess){ msg.textContent = "Type your answer first."; return; }
+
+  if(guess === norm(TEACHER_CODE)){
+    state.open = LAST; save(); render(); return;
+  }
+
+  if(QUESTS[n-1].accept.some(a => norm(a) === guess)){
+    state.open = Math.min(n + 1, LAST);
+    save();
+    render(state.open);
+    const opened = stack.querySelectorAll(".block")[state.open - 1];
+    if(opened) opened.scrollIntoView({behavior:"smooth", block:"center"});
+  }else{
+    msg.textContent = "Not the code. Go look in your Scratch tab.";
+    input.select();
+  }
+}
+
+stack.addEventListener("click", e => {
+  const b = e.target.closest("button[data-q]");
+  if(b){ attempt(Number(b.dataset.q)); return; }
+});
+
+stack.addEventListener("change", e => {
+  const box = e.target.closest("input[data-check]");
+  if(!box) return;
+  const id = box.dataset.check;
+  const at = state.checks.indexOf(id);
+  if(box.checked && at === -1) state.checks.push(id);
+  if(!box.checked && at > -1) state.checks.splice(at, 1);
+  save();
+  render();
+});
+
+stack.addEventListener("keydown", e => {
+  if(e.key === "Enter" && e.target.matches("input[type=text]")){
+    e.preventDefault();
+    const b = e.target.closest(".gaterow").querySelector("button[data-q]");
+    if(b) attempt(Number(b.dataset.q));
+  }
+});
+
+document.getElementById("start").addEventListener("click", () => {
+  state.name = who.value.trim(); save();
+  const first = stack.querySelector("input[type=text]");
+  if(first) first.focus();
+});
+who.addEventListener("keydown", e => {
+  if(e.key === "Enter"){ e.preventDefault(); document.getElementById("start").click(); }
+});
+
+document.getElementById("reset").addEventListener("click", () => {
+  state = {name:"", open:1, checks:[]}; save(); render();
+  window.scrollTo({top:0, behavior:"smooth"});
+});
+
+render();
+</script>
+</body>
+</html>
