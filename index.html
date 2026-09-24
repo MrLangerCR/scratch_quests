@@ -2,441 +2,401 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Scratch Quests</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Build a Catcher Game</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
+    --field:#2B2D6E;
+    --field-deep:#21235A;
+    --marquee:#FFB300;
+    --paper:#FFFFFF;
+    --ink:#1B1C40;
+    --pale:#E9E7FF;
+    --dim:#8B8CC4;
+    --win:#3DD68C;
     --motion:#4C97FF;
     --looks:#9966FF;
     --sound:#CF63CF;
     --events:#FFBF00;
     --control:#FF8C1A;
-    --operators:#59C059;
     --sensing:#5CB1D6;
+    --operators:#59C059;
     --variables:#FF8C1A;
-    --myblocks:#FF6680;
-    --locked:#C5CBD3;
-    --locked-ink:#6A727D;
-    --canvas:#F4F7FB;
-    --ink:#1B2430;
-    --flag:#4CBF56;
-    --glow:#FFD500;
     box-sizing:border-box;
   }
   *,*::before,*::after{box-sizing:inherit}
 
   body{
     margin:0;
-    padding:28px 16px 64px;
-    font-family:Nunito,"Helvetica Neue",Helvetica,sans-serif;
-    color:var(--ink);
-    background-color:var(--canvas);
-    background-image:radial-gradient(#D3DDEA 1.5px, transparent 1.5px);
-    background-size:22px 22px;
+    padding:24px 16px 60px;
+    font-family:Nunito,system-ui,sans-serif;
+    background:var(--field);
+    color:var(--pale);
     -webkit-text-size-adjust:100%;
   }
+  .wrap{max-width:620px;margin:0 auto}
 
-  .wrap{max-width:660px;margin:0 auto}
+  h1{
+    font-family:Fredoka,sans-serif;font-weight:700;
+    font-size:1.9rem;line-height:1.1;margin:0 0 6px;color:#fff;
+  }
+  .tagline{margin:0 0 18px;font-weight:600;color:var(--dim);max-width:46ch}
 
-  /* ---------- hat block ---------- */
-  .hat{
-    background:var(--events);
-    border-radius:26px 26px 6px 6px;
-    padding:22px 22px 20px;
+  /* ---------- live preview stage ---------- */
+  .stagebox{
+    background:var(--field-deep);
+    border-radius:14px;
+    padding:12px;
+    margin-bottom:8px;
+  }
+  .stage{
     position:relative;
-    box-shadow:0 2px 0 rgba(0,0,0,.14);
+    aspect-ratio:4/3;
+    background:var(--paper);
+    border-radius:8px;
+    overflow:hidden;
   }
-  .hat::after{content:'';position:absolute;bottom:-8px;left:22px;width:34px;height:9px;background:inherit;border-radius:0 0 9px 9px}
-  .hat h1{margin:0 0 4px;font-size:1.5rem;font-weight:800;letter-spacing:-.01em}
-  .hat p{margin:0 0 14px;font-weight:600;font-size:.95rem;max-width:44ch}
-  .namerow{display:flex;gap:8px;flex-wrap:wrap}
-
-  /* ---------- oval input, like a Scratch field ---------- */
-  input[type=text]{
-    font:inherit;font-weight:700;padding:9px 16px;border:none;border-radius:999px;
-    background:#fff;color:var(--ink);min-width:0;flex:1 1 180px;
-    box-shadow:inset 0 0 0 2px rgba(0,0,0,.12);
+  .paddle,.item{position:absolute;transform:translate(-50%,-50%);font-size:clamp(20px,6vw,30px);line-height:1}
+  .paddle{bottom:6%;top:auto;transform:translateX(-50%)}
+  .hud{
+    position:absolute;top:8px;left:10px;right:10px;
+    display:flex;justify-content:space-between;
+    font-family:Fredoka,sans-serif;font-weight:600;
+    font-size:clamp(11px,3vw,14px);color:var(--ink);
   }
-  input[type=text]::placeholder{color:#9AA3AE;font-weight:600}
-
-  button{
-    font:inherit;font-weight:800;cursor:pointer;border:none;border-radius:999px;
-    padding:9px 20px;background:#fff;color:var(--ink);box-shadow:0 2px 0 rgba(0,0,0,.18);
+  .hud span{background:#FFD966;border-radius:20px;padding:2px 11px}
+  .over{
+    position:absolute;inset:0;display:grid;place-items:center;
+    background:rgba(27,28,64,.88);color:#fff;
+    font-family:Fredoka,sans-serif;font-weight:600;font-size:clamp(14px,4.5vw,20px);
   }
-  button.go{background:var(--flag);color:#fff}
-  button:active{transform:translateY(2px);box-shadow:none}
-  :focus-visible{outline:3px solid #0D3B66;outline-offset:2px}
-
-  /* ---------- quest blocks ---------- */
-  .stack{margin-top:9px}
-  .block{
-    position:relative;margin-bottom:9px;padding:18px 22px;border-radius:6px;
-    color:#fff;box-shadow:0 2px 0 rgba(0,0,0,.14);
-  }
-  .block::after{content:'';position:absolute;bottom:-8px;left:22px;width:34px;height:9px;background:inherit;border-radius:0 0 9px 9px}
-
-  .block .label{font-weight:800;font-size:.8rem;opacity:.85;margin-bottom:2px}
-  .block h2{margin:0 0 8px;font-size:1.18rem;font-weight:800;letter-spacing:-.01em}
-  .block .task{margin:0;font-weight:600;line-height:1.45;max-width:52ch}
-  .block .task em,.boss em{font-style:normal;background:rgba(255,255,255,.22);padding:1px 6px;border-radius:5px}
-
-  .reward{
-    display:inline-block;margin-top:12px;background:rgba(0,0,0,.18);
-    padding:6px 13px;border-radius:999px;font-weight:700;font-size:.88rem;
+  .caption{
+    margin:0 0 22px;text-align:center;font-weight:700;font-size:.85rem;color:var(--dim);
   }
 
-  .gate{margin-top:16px;padding-top:14px;border-top:2px solid rgba(255,255,255,.28)}
-  .gate .hunt{margin:0 0 10px;font-weight:600;line-height:1.45;max-width:52ch}
-  .gaterow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  .msg{margin:10px 0 0;font-weight:700;font-size:.92rem;min-height:1.2em}
-
-  .block.locked{background:var(--locked);color:var(--locked-ink);box-shadow:0 2px 0 rgba(0,0,0,.08)}
-  .block.locked h2,.block.locked .label{opacity:.75}
-  .block.locked .body{display:none}
-  .block.locked .lockline{margin:0;font-weight:700;display:flex;gap:9px;align-items:center}
-
-  .block.done{opacity:.72}
-  .block.done h2::after{content:' ✓'}
-
-  /* ---------- boss quest ---------- */
-  .boss{padding:24px 22px 26px}
-  .boss h2{font-size:1.45rem;margin-bottom:6px}
-  .boss .pitch{margin:0 0 4px;font-weight:700;line-height:1.45;max-width:50ch}
-  .boss .aside{margin:0;font-weight:600;font-size:.92rem;opacity:.85;max-width:50ch}
-  .boss .sub{
-    margin:20px 0 10px;font-weight:800;font-size:.95rem;
-    padding-bottom:7px;border-bottom:2px solid rgba(255,255,255,.3);
+  /* ---------- level cards ---------- */
+  .level{
+    background:#fff;color:var(--ink);
+    border-radius:12px;padding:20px 20px 22px;margin-bottom:12px;
+    box-shadow:0 3px 0 rgba(0,0,0,.22);
   }
-  .checks{list-style:none;margin:0;padding:0}
-  .checks li{margin-bottom:9px}
-  .checks label{
-    display:flex;gap:11px;align-items:flex-start;font-weight:600;line-height:1.4;
-    cursor:pointer;max-width:50ch;
+  .lnum{
+    font-family:Fredoka,sans-serif;font-weight:600;font-size:.82rem;
+    color:#6B6DB8;margin-bottom:2px;
   }
-  .checks input{
-    appearance:none;-webkit-appearance:none;margin:2px 0 0;flex:0 0 auto;
-    width:21px;height:21px;border-radius:5px;background:#fff;cursor:pointer;
-    box-shadow:inset 0 0 0 2px rgba(0,0,0,.14);
+  .level h2{font-family:Fredoka,sans-serif;font-weight:600;font-size:1.3rem;margin:0 0 10px}
+  .build{margin:0;font-weight:600;line-height:1.5;max-width:50ch}
+  .build em,.tweak em,.test em{
+    font-style:normal;background:#EFEDFF;padding:1px 6px;border-radius:5px;font-weight:700;
   }
-  .checks input:checked{background:var(--flag)}
-  .checks input:checked::after{
-    content:'✓';display:block;text-align:center;line-height:21px;
-    color:#fff;font-weight:800;font-size:.95rem;
-  }
-  .checks input:checked + span{opacity:.6;text-decoration:line-through}
 
-  .picks{margin:0;padding-left:22px}
-  .picks li{font-weight:600;line-height:1.4;margin-bottom:7px;max-width:50ch}
-
-  .shipped{
-    margin:18px 0 0;padding:13px 16px;border-radius:8px;background:rgba(0,0,0,.2);
-    font-weight:700;line-height:1.45;max-width:50ch;
+  .blocks{margin:14px 0 0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+  .blocks li{
+    color:#fff;font-weight:700;font-size:.85rem;
+    padding:6px 12px;border-radius:5px;box-shadow:0 2px 0 rgba(0,0,0,.16);
   }
-  .shipped strong{display:block;font-size:1.05rem;margin-bottom:3px}
+  .blocknote{margin:9px 0 0;font-size:.85rem;font-weight:700;color:#6B6DB8}
 
-  /* the one reveal */
-  @keyframes pop{
-    0%{box-shadow:0 0 0 0 var(--glow),0 2px 0 rgba(0,0,0,.14)}
-    35%{box-shadow:0 0 0 6px var(--glow),0 2px 0 rgba(0,0,0,.14)}
-    100%{box-shadow:0 0 0 0 var(--glow),0 2px 0 rgba(0,0,0,.14)}
+  .test,.tweak{
+    margin:16px 0 0;padding:12px 14px;border-radius:9px;
+    font-weight:600;line-height:1.45;max-width:50ch;
   }
-  .block.justopened{animation:pop 1.1s ease-out}
+  .test{background:#F1F0FF}
+  .test b{display:block;font-family:Fredoka,sans-serif;font-weight:600;margin-bottom:2px}
+  .tweak{background:#FFF6E0}
+  .tweak b{display:block;font-family:Fredoka,sans-serif;font-weight:600;margin-bottom:2px;color:#8A6200}
+
+  .next{
+    font:inherit;font-family:Fredoka,sans-serif;font-weight:600;font-size:1rem;
+    margin-top:18px;width:100%;cursor:pointer;border:none;
+    background:var(--win);color:#08331F;border-radius:999px;padding:13px 18px;
+    box-shadow:0 3px 0 #22996210;
+  }
+  .next:active{transform:translateY(2px)}
+  :focus-visible{outline:3px solid var(--marquee);outline-offset:3px}
+
+  /* locked + cleared */
+  .level.locked{
+    background:transparent;color:var(--dim);box-shadow:inset 0 0 0 2px rgba(255,255,255,.14);
+    padding:14px 20px;
+  }
+  .level.locked .lnum{color:var(--dim);opacity:.8}
+  .level.locked h2{font-size:1.05rem;margin:0;display:flex;gap:9px;align-items:center}
+  .level.cleared{opacity:.55}
+  .level.cleared h2::after{content:' ✓';color:#1E9E63}
+  .level.cleared .test,.level.cleared .next{display:none}
+
+  @keyframes flash{
+    0%{box-shadow:0 0 0 0 var(--marquee),0 3px 0 rgba(0,0,0,.22)}
+    40%{box-shadow:0 0 0 5px var(--marquee),0 3px 0 rgba(0,0,0,.22)}
+    100%{box-shadow:0 0 0 0 var(--marquee),0 3px 0 rgba(0,0,0,.22)}
+  }
+  .level.fresh{animation:flash 1s ease-out}
   @media (prefers-reduced-motion:reduce){
-    .block.justopened{animation:none}
-    button:active{transform:none}
+    .level.fresh{animation:none}
+    .next:active{transform:none}
   }
 
-  /* ---------- end cap ---------- */
-  .cap{
-    background:var(--sensing);color:#fff;border-radius:6px 6px 22px 22px;
-    padding:20px 22px 24px;box-shadow:0 2px 0 rgba(0,0,0,.14);
+  /* ---------- finale ---------- */
+  .finale{
+    background:var(--marquee);color:#3A2600;
+    border-radius:12px;padding:22px 20px 24px;box-shadow:0 3px 0 rgba(0,0,0,.22);
   }
-  .cap h2{margin:0 0 8px;font-size:1.15rem;font-weight:800}
-  .cap p{margin:0 0 10px;font-weight:600;line-height:1.45;max-width:52ch}
-  .cap p:last-child{margin-bottom:0}
-  .cap em{font-style:normal;background:rgba(255,255,255,.22);padding:1px 6px;border-radius:5px}
-  .cap a{color:#fff;font-weight:800}
+  .finale h2{font-family:Fredoka,sans-serif;font-weight:700;font-size:1.4rem;margin:0 0 8px}
+  .finale p{margin:0 0 14px;font-weight:700;line-height:1.5;max-width:48ch}
+  .finale ul{margin:0;padding-left:20px}
+  .finale li{font-weight:600;line-height:1.45;margin-bottom:8px;max-width:48ch}
+  .finale a{color:#3A2600;font-weight:800}
+  .share{margin:18px 0 0;padding-top:14px;border-top:2px solid rgba(58,38,0,.25);font-weight:700}
 
-  footer{margin-top:26px;text-align:center;font-weight:600;font-size:.85rem;color:#6A727D}
-  footer button{background:transparent;box-shadow:none;padding:4px 8px;font-weight:700;font-size:.85rem;color:#6A727D;text-decoration:underline}
+  footer{margin-top:24px;text-align:center;font-weight:600;font-size:.84rem;color:var(--dim)}
+  footer button{
+    font:inherit;font-weight:700;background:none;border:none;color:var(--dim);
+    text-decoration:underline;cursor:pointer;padding:4px 6px;
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <div class="hat">
-    <h1>Scratch Quests</h1>
-    <p>One project, six upgrades, one boss. Finish a quest, find the code, unlock the next one.</p>
-    <div class="namerow">
-      <input type="text" id="who" placeholder="Type your name" autocomplete="off" spellcheck="false" aria-label="Your name">
-      <button class="go" id="start">Start</button>
+  <h1>Build a catcher game</h1>
+  <p class="tagline">Six levels. Each one adds a working piece. Play it after every level — if it does not work yet, you are not done.</p>
+
+  <div class="stagebox">
+    <div class="stage" id="stage" aria-hidden="true">
+      <div class="hud"><span id="hudScore">Score 0</span><span id="hudLives">Lives 3</span></div>
+      <div class="item" id="item">🍎</div>
+      <div class="paddle" id="paddle">🧺</div>
+      <div class="over" id="over" hidden>Game over</div>
     </div>
   </div>
+  <p class="caption" id="caption">This is what you have after Level 1</p>
 
-  <div class="stack" id="stack"></div>
+  <div id="levels"></div>
 
-  <div class="cap">
-    <h2>Before you leave</h2>
-    <p>However far you got, share it. Click <em>See Project Page</em>, then <em>Add to Studio</em>.</p>
-    <p><a id="studio" href="#" target="_blank" rel="noopener">Open the class studio</a></p>
+  <div class="finale" id="finale" hidden>
+    <h2>The shell is done. Now make it yours.</h2>
+    <p>Everyone's game works the same right now. This is where they stop looking the same. Take any of these as far as you want.</p>
+    <ul>
+      <li>Re-skin the whole thing. Catching fish in the ocean, dodging homework, collecting pizza. Swap the sprites and the backdrop.</li>
+      <li>Add a bonus item worth 5 points that only shows up sometimes.</li>
+      <li>Add a bomb. Touch it and you lose a life instantly.</li>
+      <li>Add a title screen — a backdrop with the rules and <em>wait until key space pressed</em> before anything starts.</li>
+      <li>Track a high score in a second variable that does not reset.</li>
+      <li>Switch the backdrop at 10 points so it feels like level two.</li>
+      <li>Add music with <em>play sound until done</em> inside a forever loop.</li>
+    </ul>
+    <p class="share">Before you leave: <em>See Project Page</em>, then <em>Add to Studio</em>. <a id="studio" href="#" target="_blank" rel="noopener">Open the class studio</a></p>
   </div>
 
-  <footer>
-    Progress saves on this device only. <button id="reset">Start over</button>
-  </footer>
+  <footer>Progress saves on this device only. <button id="reset">Start over</button></footer>
 </div>
 
 <script>
 /* ============================================================
    EDIT HERE — Mr. Langer
-   Change the studio link and any codes before class.
-   Answers are case-insensitive. List every spelling you'll accept.
    ============================================================ */
-
 const STUDIO_URL = "https://scratch.mit.edu/studios/000000/";   // <-- paste your studio link
-const TEACHER_CODE = "langer";                                   // unlocks everything, for demos
 
-const QUESTS = [
+const LEVELS = [
   {
-    color: "motion",
-    title: "Pick your hero",
-    task: "Delete the cat. Choose any sprite from the library. Rename your project <em>Quest_YourName</em>.",
-    reward: "Unlocks: the Motion blocks",
-    hunt: "Look at the three tabs in the top-left of the editor. They say Code, Costumes, and what?",
-    accept: ["sounds","sound"]
+    title:"The catcher",
+    build:"Delete the cat. Pick a sprite to be your catcher, shrink it to about 50, and drag it to the bottom of the stage. Then make it slide left and right by following your mouse or finger.",
+    blocks:[["when green flag clicked","events"],["forever","control"],["set x to","motion"],["mouse x","sensing"]],
+    blocknote:"Use these four, in this order.",
+    test:"Move your pointer across the stage. Does the catcher follow you sideways and stay at the bottom?",
+    tweak:"Your catcher can be anything — a basket, a shark, a face. Pick one nobody else will."
   },
   {
-    color: "operators",
-    title: "Make it move",
-    task: "Use <em>when key pressed</em> so your sprite moves with the arrow keys. All four directions.",
-    reward: "Unlocks: the Operators blocks",
-    hunt: "What color are the Operators blocks in the palette?",
-    accept: ["green"]
+    title:"Something falls",
+    build:"Add a second sprite up at the top. Make it drift down the stage. When it gets to the bottom, send it back to the top at a random spot so it never falls in the same place twice.",
+    blocks:[["forever","control"],["change y by","motion"],["if then","control"],["y position","motion"],["<","operators"],["go to x: y:","motion"],["pick random","operators"]],
+    blocknote:"You need all of these. Figuring out the order is the work.",
+    test:"Click the flag and watch. Does it fall over and over, landing somewhere different each time?",
+    tweak:"What is falling? An apple is boring. Try a donut, a star, a whole planet."
   },
   {
-    color: "sound",
-    title: "Give it a voice",
-    task: "Add <em>when this sprite clicked</em> and make your sprite say something. Then add a sound.",
-    reward: "Unlocks: the Sound blocks",
-    hunt: "Go to the top menu bar of scratch.mit.edu. It says Create, Explore, About, and what?",
-    accept: ["ideas","idea"]
+    title:"Catching counts",
+    build:"Make a variable called <em>Score</em> and set it to 0 when the flag is clicked. Now, while the object is falling, check whether it is touching your catcher. If it is, add a point and send it straight back to the top.",
+    blocks:[["set Score to 0","variables"],["change Score by 1","variables"],["if then","control"],["touching ?","sensing"]],
+    blocknote:"These go inside the falling sprite's forever loop.",
+    test:"Catch one. Does the score go up and the object jump back to the top the instant you touch it?",
+    tweak:"Add a sound on the catch, and make your catcher change costume or grow for a second."
   },
   {
-    color: "looks",
-    title: "Build a world",
-    task: "Add a backdrop. Make your sprite react when it touches an edge or a color — change size, change color, or hide.",
-    reward: "Unlocks: the Looks blocks and graphic effects",
-    hunt: "Click Add Extension in the bottom-left corner. Which extension lets you draw lines behind your sprite?",
-    accept: ["pen","the pen"]
+    title:"Missing hurts",
+    build:"Make a second variable called <em>Lives</em> and set it to 3 at the start. You already detect when the object reaches the bottom — that is a miss. Take away a life when it happens.",
+    blocks:[["set Lives to 3","variables"],["change Lives by -1","variables"]],
+    blocknote:"No new logic here. Add these to the code you already wrote.",
+    test:"Let one fall past you on purpose. Does Lives drop from 3 to 2?",
+    tweak:"Make the miss feel bad — a low sound, or flash the backdrop with a graphic effect."
   },
   {
-    color: "control",
-    title: "Add a rival",
-    task: "Add a second sprite that does something different — chases you, runs away, or moves on its own with <em>forever</em>.",
-    reward: "Unlocks: the Control blocks and clones",
-    hunt: "Open the Sensing category. Which block measures how loud the microphone is?",
-    accept: ["loudness","the loudness"]
+    title:"Game over",
+    build:"Right now the game never ends. On your catcher sprite, make the game wait until Lives runs out, then announce the final score and stop everything.",
+    blocks:[["wait until","control"],["=","operators"],["say for 2 seconds","looks"],["join","operators"],["stop all","control"]],
+    blocknote:"The join block is how you get words and the score in the same sentence.",
+    test:"Miss three on purpose. Does it tell you your score and freeze?",
+    tweak:"Write your own game over line. It should sound like you, not like a computer."
   },
   {
-    color: "variables",
-    title: "Keep score",
-    task: "Make a variable called <em>Score</em>. Set it to 0 at the start, and change it by 1 when your two sprites touch.",
-    reward: "Unlocks: the boss quest",
-    hunt: "Open the Variables category. One button at the top says Make a Variable. What does the other one say?",
-    accept: ["make a list","list","lists"]
-  },
-  {
-    boss: true,
-    color: "myblocks",
-    title: "Boss quest: ship a game",
-    pitch: "You have a sprite that moves and a score that counts. That is not a game yet — a game is something a stranger can win or lose.",
-    aside: "Keep the same project. Do not start over.",
-    requirements: [
-      "Something worth chasing. When your player touches it, send it to <em>random position</em> so it never sits still.",
-      "A clock. Make a <em>Time</em> variable, set it to 30, and use <em>repeat until</em> to count it down by 1 every second.",
-      "An ending. When the clock hits 0, say the final score and use <em>stop all</em>."
-    ],
-    upgrades: [
-      "A sound and a costume change on every point.",
-      "A way to lose — an enemy sprite that ends the game the second it touches you.",
-      "A title screen. Backdrop with the rules, and <em>wait until key space pressed</em> to begin.",
-      "Rising difficulty. Move the enemy faster each time the score goes up.",
-      "A second level. Switch backdrop when the score passes 10."
-    ],
-    shipped: {
-      head: "Now the real test.",
-      body: "Hand your Chromebook to someone near you and say nothing. Watch them play. Whatever they got confused about is the next thing you fix — not the thing you explain."
-    }
+    title:"It gets harder",
+    build:"A game that stays the same speed gets boring in about twenty seconds. Make a variable called <em>Speed</em>, set it to -5 at the start, and use it to control how far the object drops each step. Every time you catch something, make Speed a little more negative.",
+    blocks:[["set Speed to -5","variables"],["change Speed by -0.5","variables"],["change y by Speed","motion"]],
+    blocknote:"Speed is negative because falling means going down.",
+    test:"Play for thirty seconds without missing. Can you feel it speeding up?",
+    tweak:"Too brutal? Only speed up every fifth catch instead of every catch."
   }
 ];
 
 /* ============================================================
    No need to edit below this line.
    ============================================================ */
+const KEY = "catcher-build-v1";
+const LAST = LEVELS.length;
+let open = loadProgress();
 
-const KEY = "scratch-quests-v2";
-const LAST = QUESTS.length;
-let state = load();
-
-function load(){
+function loadProgress(){
   try{
-    const raw = localStorage.getItem(KEY);
-    if(!raw) return {name:"", open:1, checks:[]};
-    const p = JSON.parse(raw);
-    return {
-      name: p.name || "",
-      open: Math.min(Math.max(p.open || 1, 1), LAST),
-      checks: Array.isArray(p.checks) ? p.checks : []
-    };
-  }catch(e){ return {name:"", open:1, checks:[]}; }
+    const v = parseInt(localStorage.getItem(KEY), 10);
+    return (v >= 1 && v <= LAST) ? v : 1;
+  }catch(e){ return 1; }
 }
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+function saveProgress(){ try{ localStorage.setItem(KEY, String(open)); }catch(e){} }
 
-const stack = document.getElementById("stack");
-const who = document.getElementById("who");
+const host = document.getElementById("levels");
+const finale = document.getElementById("finale");
 document.getElementById("studio").href = STUDIO_URL;
 
-function norm(s){ return (s||"").toLowerCase().replace(/[^a-z0-9 ]/g,"").replace(/\s+/g," ").trim(); }
+function chip(b){ return '<li style="background:var(--' + b[1] + ')">' + b[0] + '</li>'; }
 
-function bossMarkup(q, n){
-  const reqs = q.requirements.map((r,i) => {
-    const id = "r" + i;
-    const on = state.checks.indexOf(id) > -1;
-    return '<li><label><input type="checkbox" data-check="' + id + '"' + (on?' checked':'') +
-           '><span>' + r + '</span></label></li>';
-  }).join("");
+function render(fresh){
+  host.innerHTML = "";
 
-  const ups = q.upgrades.map(u => '<li>' + u + '</li>').join("");
-  const allDone = q.requirements.every((r,i) => state.checks.indexOf("r"+i) > -1);
-
-  return '<p class="pitch">' + q.pitch + '</p>' +
-         '<p class="aside">' + q.aside + '</p>' +
-         '<p class="sub">Three things it needs</p>' +
-         '<ul class="checks">' + reqs + '</ul>' +
-         '<p class="sub">Still have time? Pick any of these</p>' +
-         '<ul class="picks">' + ups + '</ul>' +
-         (allDone ? '<p class="shipped"><strong>' + q.shipped.head + '</strong>' + q.shipped.body + '</p>' : '');
-}
-
-function render(justOpened){
-  stack.innerHTML = "";
-
-  QUESTS.forEach((q, i) => {
+  LEVELS.forEach((lv, i) => {
     const n = i + 1;
-    const unlocked = n <= state.open;
-    const done = n < state.open;
+    const unlocked = n <= open;
+    const cleared = n < open;
 
     const el = document.createElement("section");
-    el.className = "block" + (q.boss ? " boss" : "") + (unlocked ? "" : " locked") + (done ? " done" : "");
-    if(unlocked) el.style.background = "var(--" + q.color + ")";
-    if(justOpened === n) el.classList.add("justopened");
-
-    const head = document.createElement("div");
-    head.innerHTML = '<div class="label">' + (q.boss ? "Final quest" : "Quest " + n) + '</div>' +
-                     '<h2>' + (unlocked ? q.title : "Locked") + '</h2>';
-    el.appendChild(head);
+    el.className = "level" + (unlocked ? "" : " locked") + (cleared ? " cleared" : "");
+    if(fresh === n) el.classList.add("fresh");
 
     if(!unlocked){
-      const p = document.createElement("p");
-      p.className = "lockline";
-      p.innerHTML = '<span aria-hidden="true">🔒</span> Finish Quest ' + (n-1) + ' and enter the code.';
-      el.appendChild(p);
-      stack.appendChild(el);
+      el.innerHTML = '<div class="lnum">Level ' + n + '</div>' +
+                     '<h2><span aria-hidden="true">🔒</span> ' + lv.title + '</h2>';
+      host.appendChild(el);
       return;
     }
 
-    const body = document.createElement("div");
-    body.className = "body";
+    el.innerHTML =
+      '<div class="lnum">Level ' + n + '</div>' +
+      '<h2>' + lv.title + '</h2>' +
+      '<p class="build">' + lv.build + '</p>' +
+      '<ul class="blocks">' + lv.blocks.map(chip).join("") + '</ul>' +
+      '<p class="blocknote">' + lv.blocknote + '</p>' +
+      '<div class="test"><b>Test it</b>' + lv.test + '</div>' +
+      '<div class="tweak"><b>Make it yours</b>' + lv.tweak + '</div>' +
+      (n === open && n < LAST ? '<button class="next" data-n="' + n + '">It works — unlock Level ' + (n+1) + '</button>' : '') +
+      (n === open && n === LAST ? '<button class="next" data-n="' + n + '">It works — my game is done</button>' : '');
 
-    if(q.boss){
-      body.innerHTML = bossMarkup(q, n);
-    }else{
-      body.innerHTML = '<p class="task">' + q.task + '</p><div class="reward">' + q.reward + '</div>';
-      if(q.hunt && n === state.open){
-        const gate = document.createElement("div");
-        gate.className = "gate";
-        gate.innerHTML =
-          '<p class="hunt">' + q.hunt + '</p>' +
-          '<div class="gaterow">' +
-            '<input type="text" id="code' + n + '" placeholder="Answer" autocomplete="off" spellcheck="false" aria-label="Answer for quest ' + n + '">' +
-            '<button class="go" data-q="' + n + '">Unlock</button>' +
-          '</div>' +
-          '<p class="msg" id="msg' + n + '" role="status" aria-live="polite"></p>';
-        body.appendChild(gate);
-      }
-    }
-
-    el.appendChild(body);
-    stack.appendChild(el);
+    host.appendChild(el);
   });
 
-  who.value = state.name;
+  finale.hidden = open < LAST || !document.body.dataset.finished;
+  caption();
 }
 
-function attempt(n){
-  const input = document.getElementById("code" + n);
-  const msg = document.getElementById("msg" + n);
-  const guess = norm(input.value);
-  if(!guess){ msg.textContent = "Type your answer first."; return; }
+const CAPTIONS = [
+  "This is what you have after Level 1",
+  "After Level 2 — something to catch",
+  "After Level 3 — the score works",
+  "After Level 4 — you can lose lives",
+  "After Level 5 — the game can end",
+  "After Level 6 — it speeds up. This is the finished shell."
+];
+function caption(){ document.getElementById("caption").textContent = CAPTIONS[open-1]; }
 
-  if(guess === norm(TEACHER_CODE)){
-    state.open = LAST; save(); render(); return;
+host.addEventListener("click", e => {
+  const b = e.target.closest("button[data-n]");
+  if(!b) return;
+  const n = Number(b.dataset.n);
+  if(n === LAST){
+    document.body.dataset.finished = "1";
+    render();
+    finale.scrollIntoView({behavior:"smooth", block:"start"});
+    return;
   }
-
-  if(QUESTS[n-1].accept.some(a => norm(a) === guess)){
-    state.open = Math.min(n + 1, LAST);
-    save();
-    render(state.open);
-    const opened = stack.querySelectorAll(".block")[state.open - 1];
-    if(opened) opened.scrollIntoView({behavior:"smooth", block:"center"});
-  }else{
-    msg.textContent = "Not the code. Go look in your Scratch tab.";
-    input.select();
-  }
-}
-
-stack.addEventListener("click", e => {
-  const b = e.target.closest("button[data-q]");
-  if(b){ attempt(Number(b.dataset.q)); return; }
-});
-
-stack.addEventListener("change", e => {
-  const box = e.target.closest("input[data-check]");
-  if(!box) return;
-  const id = box.dataset.check;
-  const at = state.checks.indexOf(id);
-  if(box.checked && at === -1) state.checks.push(id);
-  if(!box.checked && at > -1) state.checks.splice(at, 1);
-  save();
-  render();
-});
-
-stack.addEventListener("keydown", e => {
-  if(e.key === "Enter" && e.target.matches("input[type=text]")){
-    e.preventDefault();
-    const b = e.target.closest(".gaterow").querySelector("button[data-q]");
-    if(b) attempt(Number(b.dataset.q));
-  }
-});
-
-document.getElementById("start").addEventListener("click", () => {
-  state.name = who.value.trim(); save();
-  const first = stack.querySelector("input[type=text]");
-  if(first) first.focus();
-});
-who.addEventListener("keydown", e => {
-  if(e.key === "Enter"){ e.preventDefault(); document.getElementById("start").click(); }
+  open = Math.min(n + 1, LAST);
+  saveProgress();
+  render(open);
+  const card = host.children[open-1];
+  if(card) card.scrollIntoView({behavior:"smooth", block:"center"});
 });
 
 document.getElementById("reset").addEventListener("click", () => {
-  state = {name:"", open:1, checks:[]}; save(); render();
+  open = 1; delete document.body.dataset.finished; saveProgress(); render();
   window.scrollTo({top:0, behavior:"smooth"});
 });
 
+/* ---------- the live preview ---------- */
+const paddle = document.getElementById("paddle");
+const item   = document.getElementById("item");
+const over   = document.getElementById("over");
+const hudS   = document.getElementById("hudScore");
+const hudL   = document.getElementById("hudLives");
+const still  = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+let px = 50, ix = 50, iy = -10, score = 0, lives = 3, speed = .55, dead = 0;
+
+function resetItem(){ ix = 12 + Math.random() * 76; iy = -8; }
+
+function frame(){
+  const lvl = open;
+
+  item.style.display = lvl >= 2 ? "block" : "none";
+  hudS.style.visibility = lvl >= 3 ? "visible" : "hidden";
+  hudL.style.visibility = lvl >= 4 ? "visible" : "hidden";
+
+  if(dead > 0){
+    dead--;
+    if(dead === 0){ score = 0; lives = 3; speed = .55; resetItem(); over.hidden = true; }
+  }else{
+    // the catcher chases the item, imperfectly
+    const target = lvl >= 2 ? ix : 50 + Math.sin(Date.now()/900) * 34;
+    const lag = lvl >= 4 ? .055 : .12;
+    px += (target - px) * lag;
+
+    if(lvl >= 2){
+      iy += lvl >= 6 ? speed + score * .035 : speed;
+
+      if(lvl >= 3 && iy > 78 && iy < 94 && Math.abs(ix - px) < 11){
+        score++; resetItem();
+      }else if(iy > 104){
+        if(lvl >= 4){
+          lives--;
+          if(lives <= 0 && lvl >= 5){ over.hidden = false; dead = 110; }
+        }
+        resetItem();
+      }
+    }
+  }
+
+  paddle.style.left = px + "%";
+  item.style.left = ix + "%";
+  item.style.top  = iy + "%";
+  hudS.textContent = "Score " + score;
+  hudL.textContent = "Lives " + Math.max(lives, 0);
+
+  if(!still) requestAnimationFrame(frame);
+}
+
+resetItem();
 render();
+if(still){ px = 50; ix = 62; iy = 30; frame(); } else { requestAnimationFrame(frame); }
 </script>
 </body>
 </html>
